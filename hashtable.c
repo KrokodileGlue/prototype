@@ -135,30 +135,20 @@ int main(void)
                 nvals++;
         }
 
-        static int lookups[sizeof vals / sizeof *vals];
+        static char *lookups[sizeof vals / sizeof *vals];
 
         for (unsigned i = 0; i < nvals; i++)
-                lookups[i] = rand() % nvals;
+                lookups[i] = vals[rand() % nvals].key;
 
-        clock_t begin, end;
-
-        begin = clock();
-        for (unsigned i = 0; i < nvals; i++) {
-                struct value *value = ht_get(h, vals[lookups[i]].key);
-                if (value->type != vals[lookups[i]].type) return 1;
-        }
-        end = clock();
-        clock_t ht_time = end - begin;
+        clock_t begin = clock();
+        for (unsigned i = 0; i < nvals; i++) ht_get(h, lookups[i]);
+        clock_t ht_time = clock() - begin;
 
         begin = clock();
-        for (unsigned i = 0; i < nvals; i++) {
-                struct value *value = value_get(vals[lookups[i]].key);
-                if (value->type != vals[lookups[i]].type) return 1;
-        }
-        end = clock();
-        clock_t linear_time = end - begin;
+        for (unsigned i = 0; i < nvals; i++) value_get(lookups[i]);
+        clock_t linear_time = clock() - begin;
 
-        printf("hash table is %lf times faster (%ld vs. %ld)\n",
+        printf("hash table is %.0lf times faster (%ld vs. %ld)\n",
                (double)linear_time / (double)ht_time,
                ht_time, linear_time);
 }
