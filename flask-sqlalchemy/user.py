@@ -5,7 +5,6 @@ from model import User
 from session import session
 from schema import UserSchema
 
-schema = UserSchema()
 api = Namespace('user', description='User operations')
 
 user_model = api.model('User', {
@@ -26,4 +25,4 @@ class UserResource(Resource):
                 'message': 'No such user exists'
             }, 404
         else:
-            return schema.dump(u.first())
+            return UserSchema().dump(u.first())

@@ -1,8 +1,8 @@
 import bcrypt
 
-from sqlalchemy import Column
+from sqlalchemy import ForeignKey, Column
 from sqlalchemy.types import JSON
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, relationship, mapped_column
 
 class Base(DeclarativeBase):
     pass
@@ -15,6 +15,8 @@ class User(Base):
     email: Mapped[str] = mapped_column(unique=True)
     password_hash: Mapped[str] = mapped_column(nullable=False, unique=True)
 
+    posts: Mapped[list['Post']] = relationship(back_populates='author')
+
     def set_password(self, password):
         self.password_hash = bcrypt.hashpw(password.encode('utf8'), bcrypt.gensalt(14))
 
@@ -25,5 +27,6 @@ class Post(Base):
     __tablename__ = 'posts'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    author: Mapped[str]
+    author_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
+    author: Mapped['User'] = relationship(back_populates='posts')
     body = Column(JSON)

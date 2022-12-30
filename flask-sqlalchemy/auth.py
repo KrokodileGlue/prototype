@@ -34,6 +34,7 @@ class Register(Resource):
         }
 
         email = request.json.get('email', None)
+        password = request.json.get('password', None)
 
         try:
             email = validate_email(email).email
@@ -71,6 +72,8 @@ class Register(Resource):
 
             return success_response
 
+        u.set_password(password)
+
         # Any error should've been handled at this point. If there's an
         # unhandled exception here then Flask will send a 500 for us.
         session.add(u)
@@ -101,7 +104,7 @@ class Login(Resource):
                 'message': 'Incorrect login'
             }
 
-        access_token = create_access_token(identity=username)
+        access_token = create_access_token(identity=u)
         resp = make_response({
             'status': 'success',
             'message': 'Successfully logged in'
@@ -111,7 +114,6 @@ class Login(Resource):
 
 @api.route('/logout')
 class Logout(Resource):
-    @jwt_required()
     def post(self):
         '''Log out'''
         resp = make_response({

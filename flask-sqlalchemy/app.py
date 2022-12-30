@@ -31,10 +31,23 @@ jwt_manager = JWTManager(app)
 from user import api as user_api
 from auth import api as auth_api
 from suggestion import api as suggestion_api
+from post import api as post_api
 
 api.add_namespace(user_api)
 api.add_namespace(auth_api)
 api.add_namespace(suggestion_api)
+api.add_namespace(post_api)
+
+@jwt_manager.user_identity_loader
+def user_identity_lookup(user):
+    return user.id
+
+from model import User
+
+@jwt_manager.user_lookup_loader
+def user_lookup_callback(jwt_header, jwt_data):
+    id = jwt_data['sub']
+    return session.query(User).filter_by(id=id).one_or_none()
 
 @jwt_manager.expired_token_loader
 def expired_signature_error_handler(jwt_header, jwt_payload):

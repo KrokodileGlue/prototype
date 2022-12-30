@@ -5,7 +5,6 @@ from model import User
 from session import session
 from schema import UserSchema
 
-schema = UserSchema()
 api = Namespace('suggestion', description='Suggestions')
 
 @api.route('/username/<string:username>')
@@ -18,5 +17,5 @@ class UsernameSuggestion(Resource):
         results = session.query(User).filter(filter).all()
         return {
             'status': 'success',
-            'results': [schema.dump(result) for result in results]
+            'results': UserSchema(many=True).dump(results)
         }
