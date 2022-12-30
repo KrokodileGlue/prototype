@@ -3,14 +3,12 @@ from flask_jwt_extended import jwt_required
 
 from model import User
 from session import session
-
-from UserSchema import UserSchema
+from schema import UserSchema
 
 schema = UserSchema()
-
 api = Namespace('user', description='User operations')
 
-user = api.model('User', {
+user_model = api.model('User', {
     'username': fields.String(required=True, description='The user\'s name')
 })
 
@@ -23,6 +21,9 @@ class UserResource(Resource):
         '''Get public information about a user'''
         u = session.query(User).filter_by(username=username)
         if u.count() == 0:
-            return {}, 404
+            return {
+                'status': 'fail',
+                'message': 'No such user exists'
+            }, 404
         else:
             return schema.dump(u.first())
