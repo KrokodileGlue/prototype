@@ -1,6 +1,4 @@
-import jwt
-
-from werkzeug.security import generate_password_hash, check_password_hash
+import bcrypt
 
 from sqlalchemy.orm import declarative_base
 from sqlalchemy import Column, Integer, String
@@ -11,11 +9,11 @@ class User(Base):
     __tablename__ = 'users'
 
     id = Column(Integer, primary_key=True)
-    username = Column(String, nullable=False, unique=True)
+    username = Column(String, unique=True)
     password_hash = Column(String, nullable=False, unique=True)
 
     def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
+        self.password_hash = bcrypt.hashpw(password.encode('utf8'), bcrypt.gensalt(14))
 
     def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
+        return bcrypt.checkpw(password, self.password_hash)
