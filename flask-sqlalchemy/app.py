@@ -45,8 +45,8 @@ def user_identity_lookup(user):
 from model import User
 
 @jwt_manager.user_lookup_loader
-def user_lookup_callback(jwt_header, jwt_data):
-    id = jwt_data['sub']
+def user_lookup_callback(jwt_header, jwt_payload):
+    id = jwt_payload['sub']
     return session.query(User).filter_by(id=id).one_or_none()
 
 @jwt_manager.expired_token_loader

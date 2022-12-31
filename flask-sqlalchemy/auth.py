@@ -4,8 +4,6 @@ from flask_jwt_extended import (
     jwt_required, create_access_token, set_access_cookies, unset_access_cookies
 )
 
-from email_validator import validate_email
-
 from model import User
 from session import session
 
@@ -33,17 +31,8 @@ class Register(Resource):
             'message': 'Account created successfully'
         }
 
-        email = request.json.get('email', None)
-        password = request.json.get('password', None)
-
-        try:
-            email = validate_email(email).email
-        except Exception as e:
-            # NOTE: Might be worth customizing the error messages at some point.
-            return {
-                    'status': 'fail',
-                    'message': e.__str__()
-            }
+        password = request.json.pop('password', None)
+        email = request.json.pop('email', None)
 
         try:
             u = schema.load(request.json)
@@ -53,13 +42,22 @@ class Register(Resource):
                     'message': 'Couldn\'t deserialize user'
             }, 500
 
+        email_status, email_error = u.set_email(email)
+        if not email_status:
+            return {
+                    'status': 'fail',
+                    'message': email_error
+            }
+
+        u.set_password(password)
+
         if session.query(User).filter_by(username=u.username).count() > 0:
             return {
                 'status': 'fail',
                 'message': 'Username already in use'
             }
 
-        if session.query(User).filter_by(email=u.email).count() > 0:
+        if session.query(User).filter_by(validated_email=u.validated_email).count() > 0:
             # This is the case where an email address is already in use. It's
             # better not to tell the client that the email is being used,
             # because that could be used as the basis for an enumeration
@@ -71,8 +69,6 @@ class Register(Resource):
             # if they were trying to sign up and forgot they already had one.
 
             return success_response
-
-        u.set_password(password)
 
         # Any error should've been handled at this point. If there's an
         # unhandled exception here then Flask will send a 500 for us.
