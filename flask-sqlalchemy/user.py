@@ -7,7 +7,7 @@ Basic usage is like this:
     app = Flask()
     api = Api(app)
     from user import api as user_api
-    api.add_namespace(user_api)
+    api.add_namespace(user_api)       # Routes defined in user.py are now active
 """
 
 from flask import request
@@ -20,10 +20,9 @@ from schema import UserSchema
 
 api = Namespace('user', description='User operations')
 
-user_model = api.model('User', {
+full_user_model = api.model('User', {
     'name': fields.String(description='The user\'s name'),
     'username': fields.String(description='The user\'s username'),
-    'email': fields.String(description='The user\'s email')
 })
 
 @api.route('/<string:username>')
@@ -31,6 +30,7 @@ user_model = api.model('User', {
 @api.param('username', 'The username of the desired user')
 class UserResource(Resource):
     @jwt_required()
+    @marshal_with(full_user_model)
     def get(self, username):
         '''Get public information about a user'''
         u = session.query(User).filter_by(username=username)
@@ -97,7 +97,13 @@ class UserResource(Resource):
         if password != None:
             u.set_password(password)
 
-        u.update(user_data)
+        update_status, update_message = u.update(user_data)
+
+        if not update_status:
+            return {
+                    'status': 'fail',
+                    'message': update_message
+            }
 
         session.add(u)
         session.commit()

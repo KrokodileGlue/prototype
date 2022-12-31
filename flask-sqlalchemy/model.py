@@ -6,8 +6,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, relationship, mapped_column
 
 from email_validator import validate_email
 
-class Base(DeclarativeBase):
-    pass
+class Base(DeclarativeBase): pass
 
 class User(Base):
     __tablename__ = 'users'
@@ -65,6 +64,11 @@ class User(Base):
 
         name = user_data.pop('name', None)
         username = user_data.pop('username', None)
+
+        if len(user_data) > 0:
+            return False, 'Extraneous data in update'
+
+        return True, 'Success'
 
 class Post(Base):
     __tablename__ = 'posts'
